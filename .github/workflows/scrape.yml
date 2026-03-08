@@ -1,0 +1,37 @@
+name: Scrape AI News
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Allow manual trigger
+  push:
+    branches: [master]
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Run scraper
+        run: npm run scrape
+        
+      - name: Copy news.json to root for GitHub Pages
+        run: cp data/news.json news.json
+        
+      - name: Commit and push if changed
+        run: |
+          git config --global user.name 'AI News Bot'
+          git config --global user.email 'bot@aiagency.com'
+          git add news.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update AI news [$(date)]" && git push)
